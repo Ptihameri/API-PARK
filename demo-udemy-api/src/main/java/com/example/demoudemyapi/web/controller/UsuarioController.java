@@ -1,0 +1,108 @@
+package com.example.demoudemyapi.web.controller;
+
+import com.example.demoudemyapi.entity.Usuario;
+import com.example.demoudemyapi.service.UsuarioService;
+import com.example.demoudemyapi.web.dto.UsuarioCreateDTO;
+import com.example.demoudemyapi.web.dto.UsuarioResponseDTO;
+import com.example.demoudemyapi.web.dto.UsuarioSenhaDTO;
+import com.example.demoudemyapi.web.dto.mapper.UsuarioMapper;
+import com.example.demoudemyapi.web.exception.MensagemErro;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@Tag(name = "Usuarios", description = "Contem operações de usuarios")
+@RequiredArgsConstructor
+@RestController
+@RequestMapping("/api/v1/usuarios")
+public class UsuarioController {
+
+    private final UsuarioService usuarioService;
+
+    @Operation(summary = "Criar um usuario", description = "Recurso para criar um usuario",
+            responses = {
+                    @ApiResponse(responseCode = "201", description = "Usuario criado com sucesso",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = UsuarioResponseDTO.class))),
+                    @ApiResponse(responseCode = "409", description = "Usuario e-mail ja cadastrodo no sistema",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = MensagemErro.class))),
+                    @ApiResponse(responseCode = "422", description = "Dados enviados invalidos",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = MensagemErro.class)))
+            }
+    )
+    @PostMapping
+    public ResponseEntity<UsuarioResponseDTO> create(@Valid @RequestBody UsuarioCreateDTO createDTO) {
+        Usuario user = usuarioService.salvar(UsuarioMapper.toUsuario(createDTO));
+        return ResponseEntity.status(HttpStatus.CREATED).body(UsuarioMapper.toDto(user));
+    }
+
+    @Operation(summary = "Recuperar usuario por ID", description = "Recuperar usuario por ID, nessa requisição exige token de acesso",
+            security = @SecurityRequirement(name = "Authorization"),
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Usuario encontrado",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = UsuarioResponseDTO.class))),
+                    @ApiResponse(responseCode = "403", description = "Usuario sem acesso ao recurso",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = MensagemErro.class))),
+                    @ApiResponse(responseCode = "404", description = "Usuario não encontrado",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = MensagemErro.class))
+            )
+            }
+    )
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') OR (hasRole('CLIENTE') AND #id == authentication.principal.id)")
+    public ResponseEntity<UsuarioResponseDTO> getById(@PathVariable Long id) {
+        Usuario user = usuarioService.buscarId(id);
+        return ResponseEntity.ok(UsuarioMapper.toDto(user));
+    }
+
+    @Operation(summary = "Atualuzar senha", description = "Atualuzar senha, nessa requisição exige token de acesso",
+            security = @SecurityRequirement(name = "Authorization"),
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Senha atualizada com sucesso",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+                    @ApiResponse(responseCode = "400", description = "Senha não confere ou senha igual a senha atual",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = MensagemErro.class))),
+                    @ApiResponse(responseCode = "403", description = "Usuario sem acesso ao recurso",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = MensagemErro.class))),
+                    @ApiResponse(responseCode = "404", description = "Usuario não encontrado",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = MensagemErro.class))),
+                    @ApiResponse(responseCode = "422", description = "A senha precisa ter 6 caracteres",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = MensagemErro.class)))
+            }
+    )
+    @PatchMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','CLIENTE') AND (#id == authentication.principal.id)")
+    public ResponseEntity<String> updatePassword(@PathVariable Long id, @Valid @RequestBody UsuarioSenhaDTO dto) {
+        usuarioService.editarSenha(id, dto.getSenhaAtual(), dto.getNovaSenha(), dto.getConfirmacaoSenha());
+        return ResponseEntity.ok("Senha alterada com sucesso");
+    }
+
+    @Operation(summary = "Buscar todos", description = "Buscar todos os usuarios, nessa requisição exige token de acesso somente admin",
+            security = @SecurityRequirement(name = "Authorization"),
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Usuarios encontrados",
+                            content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = UsuarioResponseDTO.class, type = "object")))),
+                    @ApiResponse(responseCode = "403", description = "Usuario sem acesso ao recurso",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = MensagemErro.class))
+            ),
+            }
+    )
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<UsuarioResponseDTO>> getAll() {
+        List<Usuario> users = usuarioService.buscarTodos();
+        return ResponseEntity.ok(UsuarioMapper.toListDto(users));
+    }
+
+}
