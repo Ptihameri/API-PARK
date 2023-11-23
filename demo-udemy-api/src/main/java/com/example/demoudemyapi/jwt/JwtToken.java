@@ -11,3 +11,4 @@ import lombok.Setter;
 public class JwtToken {
     private String token;
 }
+

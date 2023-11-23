@@ -1,8 +1,6 @@
 package com.example.demoudemyapi.web.exception;
 
-import com.example.demoudemyapi.exception.NaoEmcontradoException;
-import com.example.demoudemyapi.exception.PasswordInvalidException;
-import com.example.demoudemyapi.exception.UsernameEmailException;
+import com.example.demoudemyapi.exception.*;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -26,8 +24,21 @@ public class ApiExceptionHandler {
                 .body(new MensagemErro(request, HttpStatus.UNPROCESSABLE_ENTITY, "Erro de validação", result));
     }
 
-    @ExceptionHandler(UsernameEmailException.class)
-    public ResponseEntity<MensagemErro> usernameEmailException(RuntimeException ex, HttpServletRequest request) {
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<MensagemErro> outroErroException(Exception ex, HttpServletRequest request) {
+        MensagemErro erro = new MensagemErro(
+                request,
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase());
+        log.error("Api erro interno: {} {}",erro, ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR).
+                contentType(MediaType.APPLICATION_JSON)
+                .body(erro);
+    }
+
+    @ExceptionHandler({UsernameEmailException.class, CpfJaCadastradorException.class, CodigoUniqueViolationException.class})
+    public ResponseEntity<MensagemErro> unicViolationException(RuntimeException ex, HttpServletRequest request) {
         log.error("Api erro:", ex);
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .contentType(MediaType.APPLICATION_JSON)

@@ -1,6 +1,7 @@
 package com.example.demoudemyapi.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -14,24 +15,25 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+@EntityListeners(AuditingEntityListener.class)
+@Table(name = "clientes")
+@Entity
 @Getter
 @Setter
 @NoArgsConstructor
-@Entity
-@EntityListeners(AuditingEntityListener.class)
-@Table(name = "usuarios")
-public class Usuario implements Serializable {
+@AllArgsConstructor
+public class Cliente implements Serializable {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "idUsuario")
     private Long id;
-    @Column(name = "nomeUsuario", nullable = false, unique = true, length = 100)
-    private String username;
-    @Column(name = "senhaUsuario", nullable = false, length = 100)
-    private String password;
-    @Enumerated(EnumType.STRING)
-    @Column(name = "role", nullable = false, length = 25)
-    private Role role = Role.ROLE_CLIENTE;
+    @Column(name = "nome", nullable = false, length = 100)
+    private String nome;
+    @Column(name = "cpf", nullable = false,unique = true, length = 11)
+    private String cpf;
+    @OneToOne
+    @JoinColumn(name = "usuario_id", nullable = false)
+    private Usuario usuario;
 
     @CreatedDate
     @Column(name = "dataCriacao")
@@ -50,18 +52,12 @@ public class Usuario implements Serializable {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Usuario usuario = (Usuario) o;
-        return Objects.equals(id, usuario.id);
+        Cliente cliente = (Cliente) o;
+        return Objects.equals(id, cliente.id);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(id);
     }
-
-    public enum Role {
-        ROLE_ADMIN, ROLE_CLIENTE
-    }
-
 }
-

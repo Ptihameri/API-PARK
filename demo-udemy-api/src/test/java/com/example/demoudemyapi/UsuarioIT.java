@@ -155,7 +155,7 @@ public class UsuarioIT {
         responseBody = testeClient
                 .get()
                 .uri("/api/v1/usuarios/131")
-                .headers(JwtAutentication.getHeaderAtutorization(testeClient, "alo@alo.com", "123456"))
+                .headers(JwtAutentication.getHeaderAtutorization(testeClient, "alo1@alo.com", "123456"))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(UsuarioResponseDTO.class)
@@ -167,15 +167,15 @@ public class UsuarioIT {
 
         responseBody = testeClient
                 .get()
-                .uri("/api/v1/usuarios/131")
-                .headers(JwtAutentication.getHeaderAtutorization(testeClient, "alo1@alo.com", "123456"))
+                .uri("/api/v1/usuarios/132")
+                .headers(JwtAutentication.getHeaderAtutorization(testeClient, "alo2@alo.com", "123456"))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(UsuarioResponseDTO.class)
                 .returnResult().getResponseBody();
         org.assertj.core.api.Assertions.assertThat(responseBody).isNotNull();
-        org.assertj.core.api.Assertions.assertThat(responseBody.getId()).isEqualTo(131);
-        org.assertj.core.api.Assertions.assertThat(responseBody.getUsername()).isEqualTo("alo1@alo.com");
+        org.assertj.core.api.Assertions.assertThat(responseBody.getId()).isEqualTo(132);
+        org.assertj.core.api.Assertions.assertThat(responseBody.getUsername()).isEqualTo("alo2@alo.com");
         org.assertj.core.api.Assertions.assertThat(responseBody.getRole()).isEqualTo("CLIENTE");
 
     }
@@ -320,7 +320,6 @@ public class UsuarioIT {
                 .returnResult().getResponseBody();
         org.assertj.core.api.Assertions.assertThat(responseBody).isNotNull();
         org.assertj.core.api.Assertions.assertThat(responseBody.size()).isEqualTo(3);
-        org.assertj.core.api.Assertions.assertThat(responseBody.size()).isEqualTo(3);
         org.assertj.core.api.Assertions.assertThat(responseBody.get(0).getId()).isEqualTo(130);
         org.assertj.core.api.Assertions.assertThat(responseBody.get(0).getUsername()).isEqualTo("alo@alo.com");
         org.assertj.core.api.Assertions.assertThat(responseBody.get(0).getRole()).isEqualTo("ADMIN");
@@ -334,60 +333,27 @@ public class UsuarioIT {
     }
 
     @Test
-    public void teste_buscarTodos_invalido_401() {
-        MensagemErro responseBody = testeClient
-                .get()
-                .uri("/api/v1/usuarios")
-                .exchange()
-                .expectStatus().isUnauthorized()
-                .expectBody(MensagemErro.class).returnResult().getResponseBody();
-        org.assertj.core.api.Assertions.assertThat(responseBody).isNotNull();
-        org.assertj.core.api.Assertions.assertThat(responseBody.getStatus()).isEqualTo(404);
+    public void teste_buscarTodos_negado_403() {
         //usuario não adimistrador
-        responseBody = testeClient
+        MensagemErro responseBody = testeClient
                 .get()
                 .uri("/api/v1/usuarios")
                 .headers(JwtAutentication.getHeaderAtutorization(testeClient, "alo1@alo.com", "123456"))
                 .exchange()
-                .expectStatus().isUnauthorized()
-                .expectBody(MensagemErro.class).returnResult().getResponseBody();
-        org.assertj.core.api.Assertions.assertThat(responseBody).isNotNull();
-        org.assertj.core.api.Assertions.assertThat(responseBody.getStatus()).isEqualTo(404);
-    }
-
-    @Test
-    public void teste_buscarTodos_invalido_403() {
-        List<UsuarioResponseDTO> responseBody = testeClient
-                .get()
-                .uri("/api/v1/usuarios")
-                .headers(JwtAutentication.getHeaderAtutorization(testeClient, "alo@alo.com", "123456"))
-                .exchange()
                 .expectStatus().isForbidden()
-                .expectBodyList(UsuarioResponseDTO.class)
-                .returnResult().getResponseBody();
-        org.assertj.core.api.Assertions.assertThat(responseBody).isNotNull();
-        org.assertj.core.api.Assertions.assertThat(responseBody.size()).isEqualTo(3);
-        org.assertj.core.api.Assertions.assertThat(responseBody.size()).isEqualTo(3);
-        org.assertj.core.api.Assertions.assertThat(responseBody.get(0).getId()).isEqualTo(130);
-        org.assertj.core.api.Assertions.assertThat(responseBody.get(0).getUsername()).isEqualTo("alo@alo.com");
-        org.assertj.core.api.Assertions.assertThat(responseBody.get(0).getRole()).isEqualTo("ADMIN");
-        org.assertj.core.api.Assertions.assertThat(responseBody.get(1).getId()).isEqualTo(131);
-        org.assertj.core.api.Assertions.assertThat(responseBody.get(1).getUsername()).isEqualTo("alo1@alo.com");
-        org.assertj.core.api.Assertions.assertThat(responseBody.get(1).getRole()).isEqualTo("CLIENTE");
-        org.assertj.core.api.Assertions.assertThat(responseBody.get(2).getId()).isEqualTo(132);
-        org.assertj.core.api.Assertions.assertThat(responseBody.get(2).getUsername()).isEqualTo("alo2@alo.com");
-        org.assertj.core.api.Assertions.assertThat(responseBody.get(2).getRole()).isEqualTo("CLIENTE");
+                .expectBody(MensagemErro.class).returnResult().getResponseBody();
 
+        org.assertj.core.api.Assertions.assertThat(responseBody).isNotNull();
+        org.assertj.core.api.Assertions.assertThat(responseBody.getStatus()).isEqualTo(403);
     }
 
-
     @Test
-    public void teste_buscarTodos_URIinvalido() {
+    public void teste_buscarTodos_semAutentcacao() {
         testeClient
                 .get()
-                .uri("/api/v1/usuario")
+                .uri("/api/v1/usuarios")
                 .exchange()
-                .expectStatus().isNotFound();
+                .expectStatus().isUnauthorized();
 
     }
 

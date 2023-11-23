@@ -64,6 +64,7 @@ public class JwtUtils {
         }catch (JwtException ex){
             log.error(String.format("Token Invalido %s", ex.getMessage()));
         }
+
         return null;
     }
     public static String getUsuarioPeloToken(String token) {
