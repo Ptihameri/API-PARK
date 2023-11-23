@@ -1,0 +1,6 @@
+com\example\demoudemyapi\VagaIT.class
+com\example\demoudemyapi\AutenticacaoIT.class
+com\example\demoudemyapi\JwtAutentication.class
+com\example\demoudemyapi\ClienteIT.class
+com\example\demoudemyapi\UsuarioIT.class
+com\example\demoudemyapi\EstacionamentoIT.class
